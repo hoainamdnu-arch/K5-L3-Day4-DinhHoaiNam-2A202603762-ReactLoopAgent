@@ -42,7 +42,7 @@ Sau bài chính, bạn có thể mở rộng agent để điều tra **GitHub, C
 
 ## 1. Chuẩn bị
 
-- Python **3.10+**, có Internet và API key của **một** trong bốn provider.
+- Python **3.10+**, có Internet và API key của **một** trong năm provider.
 - Chọn model có hỗ trợ **tool calling**. API provider/model có thể phát sinh chi phí.
 - Không cần cài package: project dùng Python standard library.
 
@@ -63,12 +63,79 @@ Chọn cấu hình khác nếu cần:
 | `gemini` | `GEMINI_API_KEY` | Tên model Gemini hỗ trợ function calling. |
 | `anthropic` | `ANTHROPIC_API_KEY` | Tên model Claude hỗ trợ tool use. |
 | `openrouter` | `OPENROUTER_API_KEY` | Model ID đầy đủ trên OpenRouter, thường có dạng provider/model. |
+| `groq` | `GROQ_API_KEY` | `openai/gpt-oss-20b` hoặc model Groq hỗ trợ tool calling. |
 
-Ví dụ chuyển sang Gemini: `export PROVIDER=gemini`, đặt `GEMINI_API_KEY` và `MODEL` phù hợp. Chọn một provider; không cần cả bốn key. File `.env.example` chỉ là mẫu: chương trình **không tự đọc `.env`**. Có thể chạy `cp .env.example .env`, điền key rồi chạy `source .env` trong mỗi terminal mới. Trên Windows, dùng Git Bash để chạy đúng các lệnh này, hoặc thay `python3` bằng `python` và đặt biến bằng `$env:TEN_BIEN='gia_tri'` trong PowerShell. Không commit key hay trace chứa dữ liệu nhạy cảm.
+Ví dụ chuyển sang Gemini: `export PROVIDER=gemini`, đặt `GEMINI_API_KEY` và `MODEL` phù hợp. Chọn một provider; không cần tất cả key. `run.py` và `evals/run_evals.py` **tự đọc `.env` ở gốc repo**, kể cả khi terminal đang ở `evals/`. Biến đã đặt trong shell được ưu tiên hơn cùng biến trong `.env`; model được chọn theo thứ tự `--model` → `MODEL` → `API_MODEL`. Trên Windows, thay `python3` bằng `python` và đặt biến bằng `$env:TEN_BIEN='gia_tri'` trong PowerShell. Không commit key hay trace chứa dữ liệu nhạy cảm.
 
-Adapter dùng Chat Completions cho OpenAI, Gemini compatibility và OpenRouter; Anthropic dùng Messages API. Nó phục vụ **tool calling cơ bản**, không bao phủ mọi tính năng đặc thù model như extended thinking. Khi provider từ chối model hoặc hết quota, kiểm tra quyền truy cập, model ID và key. Xem tài liệu: [OpenAI](https://developers.openai.com/api/docs/guides/function-calling), [Gemini](https://ai.google.dev/gemini-api/docs/openai), [Anthropic](https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works), [OpenRouter](https://openrouter.ai/docs/guides/features/tool-calling).
+Mặc định `.env.example` dùng Gemini. Lấy key tại [Google AI Studio](https://aistudio.google.com/apikey), rồi đặt cấu hình trong `.env`:
+
+```dotenv
+PROVIDER=gemini
+MODEL=gemini-3.5-flash-lite
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+GEMINI_REASONING_EFFORT=default
+PROVIDER_TIMEOUT=120
+PROVIDER_MAX_RETRIES=1
+PROVIDER_RATE_RETRIES=4
+JUDGE_PROVIDER=gemini
+JUDGE_MODEL=gemini-3.5-flash-lite
+```
+
+Khi không đặt `JUDGE_*`, agent và judge dùng cùng provider/model. Cặp eval chính dùng cùng cấu hình Gemini ở trên cho cả hai phiên bản. Adapter dùng [endpoint tương thích Chat Completions của Google](https://ai.google.dev/gemini-api/docs/openai). Trong thư mục `evals/`, chạy `python .\run_evals.py --case E2 --output ..\eval_results_e2.json` để kiểm tra cấu hình đang dùng.
+
+Để dùng Groq, lấy key tại [Groq Console](https://console.groq.com/keys) và đổi cả cấu hình agent lẫn judge:
+
+```dotenv
+PROVIDER=groq
+MODEL=qwen/qwen3.8-27b
+GROQ_API_KEY=YOUR_GROQ_API_KEY
+JUDGE_PROVIDER=groq
+JUDGE_MODEL=qwen/qwen3.8-27b
+GROQ_MAX_OUTPUT_TOKENS=768
+GROQ_OUTPUT_HINT=Trả lời ngắn gọn, tối đa khoảng 150 từ; giữ nguyên định dạng mà yêu cầu hiện tại quy định.
+GROQ_DISABLE_TOOL_VALIDATION=1
+GROQ_TOOL_CALL_RETRIES=2
+```
+
+Các tùy chọn Groq được mô tả trong [API reference](https://console.groq.com/docs/api-reference). Registry của lab vẫn kiểm tra tên tool và arguments khi tắt validation phía Groq. Retry lỗi định dạng tool call chỉ áp dụng cho HTTP 400 đúng loại, tối đa 2 lần, có feedback sửa định dạng; số lần retry có trong `usage.tool_format_retries`. Không retry 401 hoặc lỗi model/cấu hình khác. Trong phiên lab này, Groq đã chạm quota 200.000 token/ngày nên các báo cáo Groq được giữ riêng; xem [giới hạn API](https://console.groq.com/docs/rate-limits).
+
+`PROVIDER_TIMEOUT` là thời gian chờ cho một HTTP request, từ trên 0 đến 300 giây. `GEMINI_REASONING_EFFORT=low` giảm mức suy luận; đặt `default` để dùng mặc định của Google. Agent thử lại timeout tối đa `PROVIDER_MAX_RETRIES` lần liên tiếp (0–2), có khoảng chờ; mỗi lần thử lại vẫn tiêu tốn một step trong `max_steps`. `PROVIDER_RATE_RETRIES` giới hạn retry HTTP 429 ở transport (0–4, mặc định 0): chỉ chờ khi API có `Retry-After` hoặc thông báo thời gian hợp lệ không quá 120 giây. Ví dụ Groq giới hạn token/phút, đặt giá trị 4 để eval tuần tự có thể chờ phục hồi quota. HTTP 400/401/403, 429 không có thời gian chờ phù hợp hoặc đã hết số lần retry được trả về ngay. Retry transport không thêm model step hay token usage cho request bị từ chối. Timeout không xác nhận request trước đã dừng xử lý ở provider; request đó có thể vẫn phát sinh token.
+
+Để dùng [OpenCode Go](https://opencode.ai/docs/console/go/#endpoints), đổi cấu hình trong `.env` thành:
+
+```dotenv
+PROVIDER=openai
+API_ENDPOINT=https://opencode.ai/inference/go/openai/v1
+MODEL=deepseek-v4.1-flash
+API_KEY=YOUR_KEY
+```
+
+`API_ENDPOINT` và `API_KEY` áp dụng cho adapter `openai`; khi có endpoint riêng, `API_KEY` được ưu tiên hơn `OPENAI_API_KEY`. Endpoint có thể là base URL hoặc URL đầy đủ kết thúc bằng `/chat/completions`. Trong PowerShell, chạy một case từ gốc repo bằng `python .\evals\run_evals.py --case E2 --output eval_results_e2.json`; nếu đang ở `evals/`, dùng `python .\run_evals.py --case E2 --output eval_results_e2.json`. Bỏ `--case E2` để chạy toàn bộ bộ eval.
+
+Nếu eval trả `unscored`, đọc dòng lỗi ngay sau tên case hoặc `result.error` trong file JSON. `HTTP 403` kèm `Cloudflare 1010` là lỗi chặn nhận dạng client: adapter gửi `User-Agent: StatusAgentLab/1.0` và session ID ổn định theo [hướng dẫn Cloudflare](https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-1xxx-errors/error-1010/#requests-to-pages-projects-or-workersdev) và [OpenCode Go](https://opencode.ai/docs/console/go/#where-can-i-use-it). `HTTP 401` là lỗi xác thực: kiểm tra lại API key đầy đủ của workspace trong `.env` hoặc biến `API_KEY` đã đặt trong shell. Với `HTTP 400`, xem thông báo sau `API:` để biết tham số hoặc thiết lập nào bị từ chối. Khi có lỗi, CLI cũng cho biết `API_KEY` được lấy từ shell hay `.env`; giá trị trong shell được ưu tiên. Log chỉ lấy trường thông báo lỗi JSON đã che key và giới hạn độ dài, không in nguyên body hoặc headers API.
+
+Adapter dùng Chat Completions cho OpenAI, Gemini compatibility, OpenRouter và Groq; Anthropic dùng Messages API. Nó phục vụ **tool calling cơ bản**, không bao phủ mọi tính năng đặc thù model như extended thinking. Khi provider từ chối model hoặc hết quota, kiểm tra quyền truy cập, model ID và key. Xem tài liệu: [OpenAI](https://developers.openai.com/api/docs/guides/function-calling), [Gemini](https://ai.google.dev/gemini-api/docs/openai), [Anthropic](https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works), [OpenRouter](https://openrouter.ai/docs/guides/features/tool-calling).
 
 ## 2. Chạy thử
+
+Để lặp lại vòng so sánh đã lưu, chạy từ gốc repo với cấu hình Gemini ở trên:
+
+```powershell
+# Baseline đã lưu, không ghi đè agent hiện tại.
+python baselines/run_before.py --max-steps 8 --workers 1 --output eval_before.json
+# Agent sau cải tiến; giữ cùng model, judge, snapshot và budget.
+python evals/run_evals.py --max-steps 8 --workers 1 --output eval_after.json
+# Demo offline từ kết quả thật, không gọi thêm API.
+python demo_trace.py --report eval_after.json --case H1
+```
+
+Xem `baselines/README.md` về phiên bản baseline và `NOTES.md` về lỗi, bằng chứng,
+so sánh và giới hạn. Các artifact E2 cũ được lưu riêng, không dùng thay bộ 22 case.
+
+Runner ghi checkpoint sau mỗi case. Nếu bị ngắt hoặc có case chưa chấm được,
+chạy lại đúng lệnh và thêm `--resume`. Tùy chọn này giữ mọi case đã chấm (kể cả điểm 0),
+chỉ chạy lại case thiếu/`unscored`, và kiểm tra hash code/data cùng generation settings.
+Nếu có case chưa chấm, điểm tổng vẫn là `null`; không dùng trung bình tạm làm điểm cả bộ.
 
 Sau khi hoàn thiện `agent.py`:
 

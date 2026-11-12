@@ -1,0 +1,216 @@
+{
+  "status": "completed",
+  "config": {
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "judge_provider": "gemini",
+    "judge_model": "gemini-3.5-flash-lite",
+    "max_steps": 8,
+    "dataset": "core"
+  },
+  "baseline_agent": {
+    "path": "baselines/agent_before.py",
+    "sha256": "d813d0dba425de7874ecfccb18c22a225791e34b4623a2d330d42fd1255cdd87"
+  },
+  "after_agent": {
+    "path": "agent.py",
+    "sha256": "0293bc295049b72020c87b3d4806830d66c298ca72c936d6824207b5ec606585"
+  },
+  "before": {
+    "score_0_100": 88.64,
+    "model_calls": 77,
+    "tool_calls": 73,
+    "agent_tokens": 137756,
+    "judge_tokens": 63363,
+    "validation_missing_details": 9,
+    "total_tokens": 201119
+  },
+  "after": {
+    "score_0_100": 95.45,
+    "model_calls": 54,
+    "tool_calls": 42,
+    "agent_tokens": 81698,
+    "judge_tokens": 42682,
+    "validation_missing_details": 1,
+    "total_tokens": 124380
+  },
+  "bonus": {
+    "config": {
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "judge_provider": "gemini",
+      "judge_model": "gemini-3.5-flash-lite",
+      "max_steps": 16,
+      "dataset": "bonus"
+    },
+    "summary": {
+      "total_cases": 10,
+      "scored_cases": 10,
+      "unscored_cases": 0,
+      "score_0_100": 90.0,
+      "partial_mean_0_100": null,
+      "bonus_points_0_15": 13.5
+    },
+    "metrics": {
+      "score_0_100": 90.0,
+      "model_calls": 28,
+      "tool_calls": 34,
+      "agent_tokens": 49692,
+      "judge_tokens": 33417,
+      "validation_missing_details": 0,
+      "total_tokens": 83109
+    }
+  },
+  "token_reduction_percent": 38.16,
+  "generation": {
+    "PROVIDER_TIMEOUT": "120",
+    "PROVIDER_MAX_RETRIES": "1",
+    "PROVIDER_RATE_RETRIES": "4",
+    "GEMINI_REASONING_EFFORT": "default",
+    "GROQ_MAX_OUTPUT_TOKENS": "768",
+    "GROQ_OUTPUT_HINT": "d696753ffeb4aa8944eef99539e5d224652f75e1545521307f2b5876f8f40639",
+    "GROQ_DISABLE_TOOL_VALIDATION": "1",
+    "GROQ_TOOL_CALL_RETRIES": "2"
+  },
+  "reports": {
+    "eval_before.json": "5c91e0bd5e42a7721a1747faf3b526dc6bc771bea47e651f91841dff2818e280",
+    "eval_after.json": "3ee77b7f4267983a569e05da6605d4482026fda8c334e2ee459cbf865440e17a",
+    "eval_bonus.json": "7740092eef86c96bd8568ccfaf8f486f73a0c647e21f6bdada13591940909b78"
+  },
+  "per_case": [
+    {
+      "id": "E1",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "E2",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "E3",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "E4",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "E5",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "E6",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "A1",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "A2",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "A3",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "A4",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "A5",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "A6",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "A7",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "A8",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "H1",
+      "before": 60,
+      "after": 100
+    },
+    {
+      "id": "H2",
+      "before": 50,
+      "after": 50
+    },
+    {
+      "id": "H3",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "H4",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "H5",
+      "before": 100,
+      "after": 100
+    },
+    {
+      "id": "H6",
+      "before": 15,
+      "after": 100
+    },
+    {
+      "id": "H7",
+      "before": 25,
+      "after": 100
+    },
+    {
+      "id": "H8",
+      "before": 100,
+      "after": 50
+    }
+  ],
+  "offline_tests": {
+    "tests": 107,
+    "bonus": 3
+  },
+  "notes": "Primary reports use the same Gemini configuration. Groq and setup diagnostics are separate and not included in comparisons.",
+  "shared_inputs": {
+    "providers.py": "dade65a75030ffce4b1ccbc0b6a38de23fca4e1b57457d90a1f151c365b815c0",
+    "status_tools.py": "e38269099ebdab59265a0eeda952287ea056e6834a3a4ad892dc1dec1e0b3a29",
+    "config.py": "ead38cbc3e122fd23d9e9dad7284c6b66b99d266e327b96b187be7904d0e56dc",
+    "evals\\scenarios.py": "193c39f8f82cdaa3c4f7b68715ddaf94cdae1f4f760bcc893ccaa42e84436a1f",
+    "evals\\grading.py": "e64f759f933830800788f6d315768a1152214faefb947585a1ff9148e7761f25",
+    "evals\\cases.json": "bca3ea31cb42dae5a952a7522bf87242b25117e565d1a5c3c636c18635abf50b",
+    "fixtures\\cloudflare.json": "04eb4851cae0b59cda64313fb82b94c5de7ab8e3a47016844b97762c18bbd57e",
+    "fixtures\\github.json": "ef189b6b8376d42b50b5676e08264f5745a69141b19cd0ed3f86a1b74217f11c"
+  },
+  "runner_case_sha256": "13e34df0e593cafc154bef41fce1323767d6434071581a2769256f68748ef811",
+  "runtime": {
+    "workers": 1,
+    "PROVIDER_TIMEOUT": 120,
+    "PROVIDER_MAX_RETRIES": 1,
+    "PROVIDER_RATE_RETRIES": 4,
+    "GEMINI_REASONING_EFFORT": "default"
+  },
+  "resumed_primary_cases": false
+}
